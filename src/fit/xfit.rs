@@ -20,4 +20,14 @@ mod tests {
         let small_vec: Vec<f64> = vec![1., 2., 3.];
         assert_eq!(xfit(&small_vec), (2., 1.));
     }
+
+    #[test]
+    fn test_xfit_weighted() {
+        let small_vec: Vec<f64> = vec![1., 2., 3.];
+        let weights = vec![0.25, 0.5, 0.333];
+        assert_eq!(
+            xfit_weighted(&small_vec, &weights),
+            (1.7593918788730116, 0.8512102763823557)
+        );
+    }
 }
