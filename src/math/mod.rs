@@ -26,6 +26,44 @@ pub fn fact_f64(n: u64) -> f64 {
     }
 }
 
+pub fn mean(narray: &[f64]) -> f64 {
+    let sum: f64 = narray.iter().sum();
+    sum / narray.len() as f64
+}
+
+pub fn stdev(narray: &[f64]) -> f64 {
+    let n_mean: f64 = mean(narray);
+    let variance: f64 = narray
+        .iter()
+        .map(|value: &f64| {
+            let diff: f64 = n_mean - value;
+            diff * diff
+        })
+        .sum::<f64>()
+        / narray.len() as f64;
+    variance.sqrt()
+}
+
+pub fn mean_weighted(narray: &[f64], weights: &[f64]) -> f64 {
+    let weighting = weights.iter().map(|weight: &f64| 1.0 / (weight * weight));
+    let sum_weights: f64 = weighting.clone().sum();
+    let sum: f64 = weighting.zip(narray.iter()).map(|(w, n)| w * n).sum();
+    sum / sum_weights
+}
+
+pub fn stdev_weighted(narray: &[f64], weights: &[f64]) -> f64 {
+    let n_mean: f64 = mean_weighted(narray, weights);
+    let variance: f64 = narray
+        .iter()
+        .map(|value: &f64| {
+            let diff: f64 = n_mean - value;
+            diff * diff
+        })
+        .sum::<f64>()
+        / narray.len() as f64;
+    variance.sqrt()
+}
+
 pub fn binomial_permutations(n: u64, x: u64) -> f64 {
     let nsum = log_sum(n);
     let xsum = log_sum(x);
