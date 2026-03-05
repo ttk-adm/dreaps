@@ -1,4 +1,2 @@
-pub mod stats;
 pub mod discrete;
-
-
+pub mod stats;
