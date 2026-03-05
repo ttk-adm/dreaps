@@ -1,6 +1,6 @@
 fn main() {
     println!("Hello, world!");
-    use dreaps::math::{fact_f64, fact_u128};
+    use dreaps::math::discrete::{fact_f64, fact_u128};
     // if let Some(n) = fact_u128(34) {println!("{}", n)};
     // println!("{}", factorial(34));
     for i in 2..34 {

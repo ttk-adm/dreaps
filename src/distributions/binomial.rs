@@ -1,4 +1,4 @@
-use crate::math::binomial_permutations;
+use crate::math::discrete::binomial_permutations;
 
 pub struct BinomialDistribution {}
 

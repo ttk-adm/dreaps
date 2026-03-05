@@ -1,4 +1,4 @@
-use crate::math::fact_f64;
+use crate::math::discrete::fact_f64;
 
 pub struct PoissonDistribution {}
 
