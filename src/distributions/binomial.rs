@@ -1,6 +1,6 @@
 use crate::math::binomial_permutations;
 
-struct BinomialDistribution {}
+pub struct BinomialDistribution {}
 
 impl BinomialDistribution {
     pub fn coefficient(&self, n_obs: u64, n_total: u64, prob: f64) -> f64 {
