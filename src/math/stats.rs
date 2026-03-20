@@ -16,18 +16,26 @@ impl StatsArray1D {
     pub fn new(x: Vec<f64>) -> Self {
         let weights: Vec<f64> = x.iter().map(|_| 1.0).collect();
         Self {
-            x: x,
-            weights: weights,
+            x,
+            weights,
             mode: WeightMode::None,
         }
     }
 
-    pub fn new_weighted(x: Vec<f64>, weights: Vec<f64>, mode: WeightMode) -> Self {
-        Self {
-            x: x,
-            weights: weights,
-            mode: mode,
+    pub fn new_weighted(x: Vec<f64>, weights: Vec<f64>, mode: WeightMode) -> Result<Self, String> {
+        if x.len() != weights.len() {
+            return Err("x and weights must have equal lengths".into());
         }
+        Ok(Self { x, weights, mode })
+    }
+
+    pub fn push(&mut self, x: f64, weight: f64) {
+        self.x.push(x);
+        self.weights.push(weight);
+    }
+
+    pub fn len(&self) -> usize {
+        self.x.len()
     }
 }
 
@@ -40,32 +48,49 @@ pub struct StatsArray2D {
 }
 
 impl StatsArray2D {
-    pub fn new(x: Vec<f64>, y: Vec<f64>) -> Self {
+    pub fn new(x: Vec<f64>, y: Vec<f64>) -> Result<Self, String> {
+        if x.len() != y.len() {
+            return Err("x and y must have same lengths".into());
+        }
         let weights: Vec<f64> = x.iter().map(|_| 1.0).collect();
-        Self {
-            x: x,
-            y: y,
-            weights: weights,
-            mode: WeightMode::None,
-        }
+        let mode: WeightMode = WeightMode::None;
+        Ok(Self {
+            x,
+            y,
+            weights,
+            mode,
+        })
     }
 
-    pub fn new_statistical_weights(x: Vec<f64>, y: Vec<f64>) -> Self {
-        Self {
-            x: x,
-            y: y.clone(),
-            weights: y.iter().map(|_y| _y.powi(-1)).collect(),
-            mode: WeightMode::Statistical,
+    pub fn new_statistical_weights(x: Vec<f64>, y: Vec<f64>) -> Result<Self, String> {
+        if x.len() != y.len() {
+            return Err("x and y must have same lengths".into());
         }
+        let weights: Vec<f64> = y.iter().map(|_y: &f64| _y.powi(-1)).collect();
+        let mode: WeightMode = WeightMode::Statistical;
+        Ok(Self {
+            x,
+            y,
+            weights,
+            mode,
+        })
     }
 
-    pub fn new_weighted(x: Vec<f64>, y: Vec<f64>, weights: Vec<f64>, mode: WeightMode) -> Self {
-        Self {
-            x: x,
-            y: y,
-            weights: weights,
-            mode: mode,
+    pub fn new_weighted(
+        x: Vec<f64>,
+        y: Vec<f64>,
+        weights: Vec<f64>,
+        mode: WeightMode,
+    ) -> Result<Self, String> {
+        if x.len() != y.len() || x.len() != weights.len() {
+            return Err("x, y, and weights must have same lengths".into());
         }
+        Ok(Self {
+            x,
+            y,
+            weights,
+            mode,
+        })
     }
 }
 
