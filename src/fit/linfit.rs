@@ -8,6 +8,15 @@ pub struct LinFitStats {
     r: f64,
 }
 
+impl LinFitStats {
+    pub fn print(&self) {
+        println!(
+            "slope: {} ± {}\nintercept: {} ± {}\nr: {}",
+            self.slope, self.slope_error, self.intercept, self.intercept_error, self.r
+        );
+    }
+}
+
 pub fn linfit(data: StatsData) -> LinFitStats {
     LinFitStats {
         slope: data.x.mean(),
