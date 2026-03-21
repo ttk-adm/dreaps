@@ -1,6 +1,6 @@
-use crate::math::stats::StatsArray1D;
+use crate::math::stats_array::StatsArray;
 
-pub fn xfit(array: StatsArray1D) -> (f64, f64) {
+pub fn xfit(array: StatsArray) -> (f64, f64) {
     (array.mean(), array.stdev())
 }
 
@@ -11,7 +11,7 @@ mod tests {
     #[test]
     fn test_xfit() {
         let x: Vec<f64> = vec![1., 2., 3.];
-        let array = StatsArray1D::new(x);
+        let array = StatsArray::new(x);
         assert_eq!(xfit(array), (2., 1.));
     }
 
@@ -20,7 +20,7 @@ mod tests {
         let x: Vec<f64> = vec![1., 2., 3.];
         let weights: Vec<f64> = vec![0.25, 0.5, 0.333];
         let mode: WeightMode = WeightMode::Instrumental;
-        let array: StatsArray1D = StatsArray1D::new_weighted(x, weights, mode);
+        let array: StatsArray = StatsArray::new_weighted(x, weights, mode);
         assert_eq!(xfit(array), (1.7593918788730116, 1.042515420475107));
     }
 }
