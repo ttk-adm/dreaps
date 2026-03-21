@@ -1,3 +1,6 @@
+use std::iter::Zip;
+use std::slice::Iter;
+
 #[derive(Copy, Clone)]
 pub enum WeightMode {
     None,
@@ -5,220 +8,184 @@ pub enum WeightMode {
     Statistical,
 }
 
+pub fn compare_len(array_a: &[f64], array_b: &[f64]) -> Result<(), String> {
+    if array_a.len() != array_b.len() {
+        Err("arrays must have equal lengths".into())
+    } else {
+        Ok(())
+    }
+}
+
 #[derive(Clone)]
 pub struct StatsArray1D {
-    x: Vec<f64>,
-    weights: Vec<f64>,
-    mode: WeightMode,
+    pub array: Vec<f64>,
+    pub weights: Vec<f64>,
+    pub mode: WeightMode,
 }
 
 impl StatsArray1D {
-    pub fn new(x: Vec<f64>) -> Self {
-        let weights: Vec<f64> = x.iter().map(|_| 1.0).collect();
+    pub fn new(array: Vec<f64>) -> Self {
+        let weights: Vec<f64> = array.iter().map(|_| 1.0).collect();
         Self {
-            x,
+            array,
             weights,
             mode: WeightMode::None,
         }
     }
 
-    pub fn new_weighted(x: Vec<f64>, weights: Vec<f64>, mode: WeightMode) -> Result<Self, String> {
-        if x.len() != weights.len() {
-            return Err("x and weights must have equal lengths".into());
+    pub fn new_weighted(array: Vec<f64>, weights: Vec<f64>, mode: WeightMode) -> Self {
+        let status: Result<(), String> = compare_len(&array, &weights);
+        match status {
+            Err(_) => Self::new(array),
+            Ok(_) => Self {
+                array,
+                weights,
+                mode,
+            },
         }
-        Ok(Self { x, weights, mode })
     }
 
-    pub fn push(&mut self, x: f64, weight: f64) {
-        self.x.push(x);
+    pub fn push(&mut self, new_val: f64, weight: f64) {
+        self.array.push(new_val);
         self.weights.push(weight);
     }
 
     pub fn len(&self) -> usize {
-        self.x.len()
+        self.array.len()
+    }
+
+    pub fn iter(&self) -> std::slice::Iter<'_, f64> {
+        self.array.iter()
+    }
+
+    // pub fn zip<'a>(&'a self, other: Iter<'a, f64>) -> Zip<Iter<'a, f64>, Iter<'a, f64>> {
+    //     self.array.iter().zip(other)
+    // }
+
+    pub fn zip<'a, I>(&'a self, other: I) -> Zip<Iter<'a, f64>, I::IntoIter>
+    where
+        I: IntoIterator<Item = &'a f64>,
+    {
+        self.array.iter().zip(other)
+    }
+
+    pub fn wzip(&self) -> Zip<Iter<'_, f64>, Iter<'_, f64>> {
+        self.zip(self.weights.iter())
+    }
+
+    pub fn sum(&self) -> f64 {
+        let order: i32 = match self.mode {
+            WeightMode::None => return self.array.iter().sum(),
+            WeightMode::Instrumental => -2,
+            WeightMode::Statistical => -1,
+        };
+        self.wzip().map(|(x, w)| x * w.powi(order)).sum()
+    }
+
+    pub fn mean(&self) -> f64 {
+        let order: i32 = match self.mode {
+            WeightMode::None => {
+                return {
+                    let sum: f64 = self.array.iter().sum();
+                    sum / self.len() as f64
+                };
+            }
+            WeightMode::Instrumental => -2,
+            WeightMode::Statistical => 0,
+        };
+        let weighting = self.weights.iter().map(|weight| weight.powi(order));
+        let sum_weights: f64 = weighting.clone().sum();
+        let sum: f64 = weighting.zip(self.iter()).map(|(w, x)| w * x).sum();
+        sum / sum_weights
+    }
+
+    pub fn stdev(&self) -> f64 {
+        let mean: f64 = self.mean();
+        let dof: f64 = self.len() as f64 - 1.0;
+        let variance: f64 = self
+            .iter()
+            .map(|value: &f64| {
+                let diff: f64 = mean - value;
+                diff * diff
+            })
+            .sum::<f64>()
+            / dof;
+        variance.sqrt()
+    }
+
+    pub fn sum_of_squares(&self) -> f64 {
+        let order: i32 = match self.mode {
+            WeightMode::None => return self.array.iter().map(|x: &f64| x * x).sum(),
+            WeightMode::Instrumental => -2,
+            WeightMode::Statistical => -1,
+        };
+        self.wzip().map(|(x, w)| x * x * w.powi(order)).sum()
     }
 }
 
 #[derive(Clone)]
 pub struct StatsArray2D {
-    x: Vec<f64>,
-    y: Vec<f64>,
-    weights: Vec<f64>,
-    mode: WeightMode,
+    pub x: StatsArray1D,
+    pub y: StatsArray1D,
 }
 
 impl StatsArray2D {
-    pub fn new(x: Vec<f64>, y: Vec<f64>) -> Result<Self, String> {
-        if x.len() != y.len() {
-            return Err("x and y must have same lengths".into());
+    pub fn new(x: Vec<f64>, y: Vec<f64>) -> Self {
+        assert_eq!(x.len(), y.len());
+        Self {
+            x: StatsArray1D::new(x),
+            y: StatsArray1D::new(y),
         }
-        let weights: Vec<f64> = x.iter().map(|_| 1.0).collect();
-        let mode: WeightMode = WeightMode::None;
-        Ok(Self {
-            x,
-            y,
-            weights,
-            mode,
-        })
     }
 
-    pub fn new_statistical_weights(x: Vec<f64>, y: Vec<f64>) -> Result<Self, String> {
-        if x.len() != y.len() {
-            return Err("x and y must have same lengths".into());
-        }
+    pub fn new_statistical_weights(x: Vec<f64>, y: Vec<f64>) -> Self {
+        assert_eq!(x.len(), y.len());
         let weights: Vec<f64> = y.iter().map(|_y: &f64| _y.powi(-1)).collect();
         let mode: WeightMode = WeightMode::Statistical;
-        Ok(Self {
-            x,
-            y,
-            weights,
-            mode,
-        })
+        Self {
+            x: StatsArray1D::new_weighted(x, weights.clone(), mode),
+            y: StatsArray1D::new_weighted(y, weights, mode),
+        }
     }
 
-    pub fn new_weighted(
-        x: Vec<f64>,
-        y: Vec<f64>,
-        weights: Vec<f64>,
-        mode: WeightMode,
-    ) -> Result<Self, String> {
-        if x.len() != y.len() || x.len() != weights.len() {
-            return Err("x, y, and weights must have same lengths".into());
+    pub fn new_weighted(x: Vec<f64>, y: Vec<f64>, weights: Vec<f64>, mode: WeightMode) -> Self {
+        assert_eq!(x.len(), y.len());
+        let status: Result<(), String> = compare_len(&x, &weights);
+        match status {
+            Err(_) => Self::new_statistical_weights(x, y),
+            Ok(_) => Self {
+                x: StatsArray1D::new_weighted(x, weights.clone(), mode),
+                y: StatsArray1D::new_weighted(y, weights, mode),
+            },
         }
-        Ok(Self {
-            x,
-            y,
-            weights,
-            mode,
-        })
     }
-}
 
-// pub fn weighted_sum(narray: &[f64], weights: &[f64], mode: WeightMode) -> f64 {
-//     let order: i32 = match mode {
-//         WeightMode::Instrumental => -2,
-//         WeightMode::Statistical => -1,
-//     };
-//     narray
-//         .iter()
-//         .zip(weights.iter())
-//         .map(|(n, w)| n * w.powi(order))
-//         .sum()
-// }
+    pub fn zipxy(&self) -> Zip<std::slice::Iter<'_, f64>, std::slice::Iter<'_, f64>> {
+        self.x.iter().zip(self.y.iter())
+    }
 
-pub fn weighted_sum(array: StatsArray1D) -> f64 {
-    let order: i32 = match array.mode {
-        WeightMode::None => return array.x.iter().sum(),
-        WeightMode::Instrumental => -2,
-        WeightMode::Statistical => -1,
-    };
-    array
-        .x
-        .iter()
-        .zip(array.weights.iter())
-        .map(|(x, w)| x * w.powi(order))
-        .sum()
-}
+    pub fn wzipxy(
+        &self,
+    ) -> Zip<Zip<std::slice::Iter<'_, f64>, std::slice::Iter<'_, f64>>, std::slice::Iter<'_, f64>>
+    {
+        self.zipxy().zip(self.x.weights.iter())
+    }
 
-pub fn mean(narray: &[f64]) -> f64 {
-    let sum: f64 = narray.iter().sum();
-    sum / narray.len() as f64
-}
+    pub fn sum_of_products(&self) -> f64 {
+        let order: i32 = match self.x.mode {
+            WeightMode::None => return self.x.iter().zip(self.y.iter()).map(|(x, y)| x * y).sum(),
+            WeightMode::Instrumental => -2,
+            WeightMode::Statistical => -1,
+        };
+        self.wzipxy().map(|((x, y), w)| x * y * w.powi(order)).sum()
+    }
 
-pub fn stdev(narray: &[f64]) -> f64 {
-    let n_mean: f64 = mean(narray);
-    let dof: f64 = narray.len() as f64 - 1.;
-    let variance: f64 = narray
-        .iter()
-        .map(|value: &f64| {
-            let diff: f64 = n_mean - value;
-            diff * diff
-        })
-        .sum::<f64>()
-        / dof;
-    variance.sqrt()
-}
+    pub fn push(&mut self, x: f64, y: f64, weight: f64) {
+        self.x.push(x, weight);
+        self.y.push(y, weight);
+    }
 
-// pub fn mean_weighted(narray: &[f64], weights: &[f64], mode: WeightMode) -> f64 {
-//     let order: i32 = match mode {
-//         WeightMode::Instrumental => -2,
-//         WeightMode::Statistical => 0,
-//     };
-//     let weighting = weights.iter().map(|weight: &f64| weight.powi(order));
-//     let sum_weights: f64 = weighting.clone().sum();
-//     let sum: f64 = weighting.zip(narray.iter()).map(|(w, n)| w * n).sum();
-//     sum / sum_weights
-// }
-
-pub fn mean_weighted(array: StatsArray1D) -> f64 {
-    let order: i32 = match array.mode {
-        WeightMode::None => {
-            return {
-                let sum: f64 = array.x.iter().sum();
-                sum / array.x.len() as f64
-            };
-        }
-        WeightMode::Instrumental => -2,
-        WeightMode::Statistical => 0,
-    };
-    let weighting = array.weights.iter().map(|weight: &f64| weight.powi(order));
-    let sum_weights: f64 = weighting.clone().sum();
-    let sum: f64 = weighting.zip(array.x.iter()).map(|(w, x)| w * x).sum();
-    sum / sum_weights
-}
-
-// pub fn stdev_weighted(narray: &[f64], weights: &[f64], mode: WeightMode) -> f64 {
-//     let n_mean: f64 = mean_weighted(narray, weights, mode);
-//     let variance: f64 = narray
-//         .iter()
-//         .map(|value: &f64| {
-//             let diff: f64 = n_mean - value;
-//             diff * diff
-//         })
-//         .sum::<f64>()
-//         / narray.len() as f64;
-//     variance.sqrt()
-// }
-
-pub fn stdev_weighted(array: StatsArray1D) -> f64 {
-    let x_mean: f64 = mean_weighted(array.clone());
-    let variance: f64 = array
-        .x
-        .iter()
-        .map(|value: &f64| {
-            let diff: f64 = x_mean - value;
-            diff * diff
-        })
-        .sum::<f64>()
-        / array.x.len() as f64;
-    variance.sqrt()
-}
-
-pub fn weighted_sum_of_squares(array: StatsArray1D) -> f64 {
-    let order: i32 = match array.mode {
-        WeightMode::None => return array.x.iter().map(|x: &f64| x * x).sum(),
-        WeightMode::Instrumental => -2,
-        WeightMode::Statistical => -1,
-    };
-    array
-        .x
-        .iter()
-        .zip(array.weights.iter())
-        .map(|(x, w)| x * x * w.powi(order))
-        .sum()
-}
-
-pub fn weighted_sum_of_products(array: StatsArray2D) -> f64 {
-    let order: i32 = match array.mode {
-        WeightMode::None => return array.x.iter().zip(array.y.iter()).map(|(x, y)| x * y).sum(),
-        WeightMode::Instrumental => -2,
-        WeightMode::Statistical => -1,
-    };
-    array
-        .x
-        .iter()
-        .zip(array.y.iter())
-        .zip(array.weights.iter())
-        .map(|((x, y), w)| x * y * w.powi(order))
-        .sum()
+    pub fn len(&self) -> usize {
+        self.x.len()
+    }
 }

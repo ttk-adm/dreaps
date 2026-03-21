@@ -1,3 +1,5 @@
+use crate::math::stats::StatsArray2D;
+
 pub struct LinFitStats {
     slope: f64,
     intercept: f64,
@@ -6,13 +8,12 @@ pub struct LinFitStats {
     r: f64,
 }
 
-pub fn linfit(x: &[f64], y: &[f64]) -> LinFitStats {
-    use crate::math::stats::{mean, stdev};
+pub fn linfit(data: StatsArray2D) -> LinFitStats {
     LinFitStats {
-        slope: mean(x),
-        intercept: mean(y),
-        slope_error: stdev(x),
-        intercept_error: stdev(y),
+        slope: data.x.mean(),
+        intercept: data.y.mean(),
+        slope_error: data.x.stdev(),
+        intercept_error: data.y.stdev(),
         r: 0.987,
     }
     // let iter_x = x.iter();
