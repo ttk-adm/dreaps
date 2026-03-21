@@ -25,7 +25,7 @@ pub struct StatsArray1D {
 
 impl StatsArray1D {
     pub fn new(array: Vec<f64>) -> Self {
-        let weights: Vec<f64> = array.iter().map(|_| 1.0).collect();
+        let weights: Vec<f64> = vec![1.0; array.len()];
         Self {
             array,
             weights,
@@ -34,14 +34,13 @@ impl StatsArray1D {
     }
 
     pub fn new_weighted(array: Vec<f64>, weights: Vec<f64>, mode: WeightMode) -> Self {
-        let status: Result<(), String> = compare_len(&array, &weights);
-        match status {
-            Err(_) => Self::new(array),
-            Ok(_) => Self {
-                array,
-                weights,
-                mode,
-            },
+        if compare_len(&array, &weights).is_err() {
+            return Self::new(array);
+        }
+        Self {
+            array,
+            weights,
+            mode,
         }
     }
 
@@ -50,27 +49,53 @@ impl StatsArray1D {
         self.weights.push(weight);
     }
 
+    #[inline]
     pub fn len(&self) -> usize {
         self.array.len()
     }
 
-    pub fn iter(&self) -> std::slice::Iter<'_, f64> {
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.array.is_empty()
+    }
+
+    #[inline]
+    pub fn iter(&self) -> Iter<'_, f64> {
         self.array.iter()
     }
 
-    // pub fn zip<'a>(&'a self, other: Iter<'a, f64>) -> Zip<Iter<'a, f64>, Iter<'a, f64>> {
-    //     self.array.iter().zip(other)
-    // }
+    #[inline]
+    pub fn witer(&self) -> Iter<'_, f64> {
+        self.weights.iter()
+    }
 
+    #[inline]
     pub fn zip<'a, I>(&'a self, other: I) -> Zip<Iter<'a, f64>, I::IntoIter>
     where
         I: IntoIterator<Item = &'a f64>,
     {
-        self.array.iter().zip(other)
+        self.iter().zip(other)
     }
 
+    #[inline]
     pub fn wzip(&self) -> Zip<Iter<'_, f64>, Iter<'_, f64>> {
-        self.zip(self.weights.iter())
+        self.zip(self.witer())
+    }
+
+    #[inline]
+    pub fn map<'a, F>(&'a self, f: F) -> impl Iterator<Item = f64> + 'a
+    where
+        F: FnMut(f64) -> f64 + 'a,
+    {
+        self.iter().copied().map(f)
+    }
+
+    #[inline]
+    pub fn wmap<'a, F>(&'a self, f: F) -> impl Iterator<Item = f64> + 'a
+    where
+        F: FnMut(f64) -> f64 + 'a,
+    {
+        self.weights.iter().copied().map(f)
     }
 
     pub fn sum(&self) -> f64 {
@@ -103,8 +128,7 @@ impl StatsArray1D {
         let mean: f64 = self.mean();
         let dof: f64 = self.len() as f64 - 1.0;
         let variance: f64 = self
-            .iter()
-            .map(|value: &f64| {
+            .map(|value: f64| {
                 let diff: f64 = mean - value;
                 diff * diff
             })
