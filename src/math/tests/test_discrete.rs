@@ -9,7 +9,7 @@ mod test {
         assert_eq!(discrete::fact_u64(4), Some(24));
         assert_eq!(discrete::fact_u64(21), None);
     }
-    
+
     #[test]
     fn test_fact_u128() {
         assert_eq!(discrete::fact_u128(1), Some(1));
@@ -18,7 +18,7 @@ mod test {
         assert_eq!(discrete::fact_u128(21), Some(51090942171709440000));
         assert_eq!(discrete::fact_u128(35), None);
     }
-        
+
     #[test]
     fn test_log_sum() {
         assert_eq!(discrete::log_sum(1), 0.);
@@ -26,7 +26,7 @@ mod test {
         assert_eq!(discrete::log_sum(3), 1.791759469228055);
         assert_eq!(discrete::log_sum(35), 92.13617560368711);
     }
-            
+
     #[test]
     fn test_fact_f64() {
         assert_eq!(discrete::fact_f64(1), 1.);
@@ -34,9 +34,12 @@ mod test {
         assert_eq!(discrete::fact_f64(3), 6.);
         assert_eq!(discrete::fact_f64(4), 24.);
         assert_eq!(discrete::fact_f64(21), 51090942171709440000.);
-        assert_eq!(discrete::fact_f64(35), 10333147966386297000000000000000000000000.);
+        assert_eq!(
+            discrete::fact_f64(35),
+            10333147966386297000000000000000000000000.
+        );
     }
-                
+
     #[test]
     fn test_binomial_permutations() {
         assert_eq!(discrete::binomial_permutations(3, 3), 1.);
