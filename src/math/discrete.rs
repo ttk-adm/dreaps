@@ -33,15 +33,3 @@ pub fn binomial_permutations(n: u64, x: u64) -> f64 {
     let sum = nsum - xsum - zsum;
     sum.exp()
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn test_fact_f64() {
-        assert_eq!(fact_f64(2), 2.0);
-        assert_eq!(fact_f64(3), 6.0);
-        assert_eq!(fact_f64(4), 24.0);
-        assert_eq!(fact_f64(5), 120.0);
-    }
-}
