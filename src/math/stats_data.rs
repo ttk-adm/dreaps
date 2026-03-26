@@ -23,7 +23,7 @@ impl StatsData {
         let weights: Vec<f64> = y.iter().map(|_y: &f64| _y.powi(-1)).collect();
         let mode: WeightMode = WeightMode::Statistical;
         Self {
-            x: StatsArray::new_weighted(x, weights.clone(), mode),
+            x: StatsArray::new(x),
             y: StatsArray::new_weighted(y, weights, mode),
         }
     }
@@ -34,26 +34,26 @@ impl StatsData {
         match status {
             Err(_) => Self::new_statistical_weights(x, y),
             Ok(_) => Self {
-                x: StatsArray::new_weighted(x, weights.clone(), mode),
+                x: StatsArray::new(x),
                 y: StatsArray::new_weighted(y, weights, mode),
             },
         }
     }
 
-    pub fn zipxy(&self) -> Zip<std::slice::Iter<'_, f64>, std::slice::Iter<'_, f64>> {
+    fn zipxy(&self) -> Zip<std::slice::Iter<'_, f64>, std::slice::Iter<'_, f64>> {
         self.x.iter().zip(self.y.iter())
     }
 
-    pub fn wzipxy(
+    fn wzipxy(
         &self,
     ) -> Zip<Zip<std::slice::Iter<'_, f64>, std::slice::Iter<'_, f64>>, std::slice::Iter<'_, f64>>
     {
-        self.zipxy().zip(self.x.weights.iter())
+        self.zipxy().zip(self.y.weights.iter())
     }
 
     pub fn sum_of_products(&self) -> f64 {
-        let order: i32 = match self.x.mode {
-            WeightMode::None => return self.x.iter().zip(self.y.iter()).map(|(x, y)| x * y).sum(),
+        let order: i32 = match self.y.mode {
+            WeightMode::None => return self.zipxy().map(|(x, y)| x * y).sum(),
             WeightMode::Instrumental => -2,
             WeightMode::Statistical => -1,
         };
@@ -61,7 +61,7 @@ impl StatsData {
     }
 
     pub fn push(&mut self, x: f64, y: f64, weight: f64) {
-        self.x.push(x, weight);
+        self.x.push(x, 1.);
         self.y.push(y, weight);
     }
 
