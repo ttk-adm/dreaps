@@ -38,11 +38,8 @@ pub fn linfit(data: &StatsData) -> LinFitStats {
         let cross_slope_sumxy: f64 = slope * sumxy;
         let cross_slope_intercept_sumx: f64 = slope * intercept * sumx;
 
-        let adjustment: f64 = 2.0 * (
-            cross_intercept_sumy +
-            cross_slope_sumxy -
-            cross_slope_intercept_sumx
-        );
+        let adjustment: f64 =
+            2.0 * (cross_intercept_sumy + cross_slope_sumxy - cross_slope_intercept_sumx);
 
         let numerator: f64 = sumy2 + intercept_term + slope_term - adjustment;
 

@@ -29,7 +29,10 @@ impl StatsArray {
             WeightMode::Instrumental => -2,
             WeightMode::Statistical => -1,
         };
-        let weights: Vec<f64> = weights.iter().map(move |_w: &f64| _w.powi(order).abs()).collect();
+        let weights: Vec<f64> = weights
+            .iter()
+            .map(move |_w: &f64| _w.powi(order).abs())
+            .collect();
         Self {
             array,
             weights,
@@ -79,7 +82,7 @@ impl StatsArray {
     pub fn sum(&self) -> f64 {
         match self.mode {
             WeightMode::None => self.iter().sum(),
-            _ => self.wzip().map(|(_n, _w)| _n * _w).sum()
+            _ => self.wzip().map(|(_n, _w)| _n * _w).sum(),
         }
     }
 
@@ -90,7 +93,7 @@ impl StatsArray {
     pub fn mean(&self) -> f64 {
         match self.mode {
             WeightMode::Instrumental => self.sum() / self.wsum(),
-            _ => self.iter().sum::<f64>() / self.lenf64()
+            _ => self.iter().sum::<f64>() / self.lenf64(),
         }
     }
 
@@ -110,7 +113,7 @@ impl StatsArray {
     pub fn sum_of_squares(&self) -> f64 {
         match self.mode {
             WeightMode::None => self.iter().map(|_n: &f64| _n * _n).sum(),
-            _ => self.wzip().map(|(_n, _w)| _n * _n * _w).sum()
+            _ => self.wzip().map(|(_n, _w)| _n * _n * _w).sum(),
         }
     }
 }

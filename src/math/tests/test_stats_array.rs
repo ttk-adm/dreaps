@@ -28,7 +28,10 @@ mod tests {
         let mode: WeightMode = WeightMode::Instrumental;
         let stat_array: StatsArray = StatsArray::new_weighted(array, weights, mode);
         assert_eq!(stat_array.array, vec![1., 2., 3.]);
-        assert_eq!(stat_array.weights, vec![99.99999999999999, 24.999999999999996, 11.11111111111111]);
+        assert_eq!(
+            stat_array.weights,
+            vec![99.99999999999999, 24.999999999999996, 11.11111111111111]
+        );
         assert_eq!(stat_array.mode, WeightMode::Instrumental);
     }
 

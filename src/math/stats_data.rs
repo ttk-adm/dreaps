@@ -54,7 +54,7 @@ impl StatsData {
     pub fn sum_of_products(&self) -> f64 {
         match self.y.mode {
             WeightMode::None => return self.zipxy().map(|(x, y)| x * y).sum(),
-            _ => self.wzipxy().map(|((x, y), w)| x * y * w).sum()
+            _ => self.wzipxy().map(|((x, y), w)| x * y * w).sum(),
         }
     }
 
