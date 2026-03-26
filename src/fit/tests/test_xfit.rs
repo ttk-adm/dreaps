@@ -7,7 +7,7 @@ mod tests {
     #[test]
     fn test_xfit() {
         let x: Vec<f64> = vec![1., 2., 3.];
-        let array = StatsArray::new(x);
+        let array: StatsArray = StatsArray::new(x);
         assert_eq!(xfit(array), (2., 1.));
     }
 
