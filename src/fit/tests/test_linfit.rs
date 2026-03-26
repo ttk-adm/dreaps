@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::fit::linfit::{linfit, LinFitStats};
+    use crate::fit::linfit::{LinFitStats, linfit};
     use crate::math::stats::WeightMode;
     use crate::math::stats_data::StatsData;
 
@@ -13,7 +13,7 @@ mod tests {
         assert_eq!(fit.intercept, 0.);
         assert_eq!(fit.slope_error, 0.);
         assert_eq!(fit.intercept_error, 0.);
-        assert_eq!(fit.r, 1.);
+        assert_eq!(fit.r2, 1.);
 
         let y: Vec<f64> = vec![1., 3., 5., 7., 9.];
         let data: StatsData = StatsData::new(data.x.array, y);
@@ -22,7 +22,7 @@ mod tests {
         assert_eq!(fit.intercept, -1.);
         assert_eq!(fit.slope_error, 0.);
         assert_eq!(fit.intercept_error, 0.);
-        assert_eq!(fit.r, 1.);
+        assert_eq!(fit.r2, 1.);
 
         let y: Vec<f64> = vec![-13., -5., 3., 11., 19.];
         let data: StatsData = StatsData::new(data.x.array, y);
@@ -31,8 +31,7 @@ mod tests {
         assert_eq!(fit.intercept, -21.);
         assert_eq!(fit.slope_error, 0.);
         assert_eq!(fit.intercept_error, 0.);
-        assert_eq!(fit.r, 1.);
-        println!("{}", fit.intercept)
+        assert_eq!(fit.r2, 1.);
     }
 
     #[test]
@@ -45,7 +44,7 @@ mod tests {
         assert_eq!(fit.intercept, -0.17000000000000226);
         assert_eq!(fit.slope_error, 0.08544003745317416);
         assert_eq!(fit.intercept_error, 0.28337254630609127);
-        assert_eq!(fit.r, 0.990909090909091);
+        assert_eq!(fit.r2, 0.990909090909091);
     }
 
     #[test]
@@ -56,10 +55,22 @@ mod tests {
         let mode: WeightMode = WeightMode::Statistical;
         let data: StatsData = StatsData::new_weighted(x, y, weights, mode);
         let fit: LinFitStats = linfit(&data);
-        println!("{}", fit.slope);
-        println!("{}", fit.intercept);
-        println!("{}", fit.slope_error);
-        println!("{}", fit.intercept_error);
-        println!("{}", fit.r);
+        assert_eq!(fit.slope, 1.0869589192169835);
+        assert_eq!(fit.intercept, -0.16087675765095266);
+        assert_eq!(fit.slope_error, 0.08178208238033954);
+        assert_eq!(fit.intercept_error, 0.2597270001864636);
+        assert_eq!(fit.r2, 0.9916152089003146);
+
+        let x: Vec<f64> = vec![1., 2., 3., 4., 5.];
+        let y: Vec<f64> = vec![0.9, 2.1, 3.2, 3.8, 5.5];
+        let weights: Vec<f64> = vec![0.11, 0.12, 0.13, 0.14, 0.15];
+        let mode: WeightMode = WeightMode::Instrumental;
+        let data: StatsData = StatsData::new_weighted(x, y, weights, mode);
+        let fit: LinFitStats = linfit(&data);
+        assert_eq!(fit.slope, 1.0847210102802178);
+        assert_eq!(fit.intercept, -0.15451021830434367);
+        assert_eq!(fit.slope_error, 0.07849453233288557);
+        assert_eq!(fit.intercept_error, 0.23802366740979325);
+        assert_eq!(fit.r2, 0.9922365722552524);
     }
 }
