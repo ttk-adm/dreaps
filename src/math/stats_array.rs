@@ -24,6 +24,12 @@ impl StatsArray {
         if compare_len(&array, &weights).is_err() {
             return Self::new(array);
         }
+        let order: i32 = match mode {
+            WeightMode::None => 0,
+            WeightMode::Instrumental => -2,
+            WeightMode::Statistical => -1,
+        };
+        let weights: Vec<f64> = weights.iter().map(move |_w: &f64| _w.powi(order).abs()).collect();
         Self {
             array,
             weights,
@@ -33,7 +39,11 @@ impl StatsArray {
 
     pub fn push(&mut self, new_val: f64, weight: f64) {
         self.array.push(new_val);
-        self.weights.push(weight);
+        match self.mode {
+            WeightMode::None => self.weights.push(1.),
+            WeightMode::Instrumental => self.weights.push(weight.powi(-2)),
+            WeightMode::Statistical => self.weights.push(weight.powi(-1).abs()),
+        };
     }
 
     #[inline]
@@ -42,13 +52,8 @@ impl StatsArray {
     }
 
     #[inline]
-    pub fn lenf(&self) -> f64 {
+    pub fn lenf64(&self) -> f64 {
         self.len() as f64
-    }
-
-    #[inline]
-    pub fn is_empty(&self) -> bool {
-        self.array.is_empty()
     }
 
     #[inline]
@@ -57,7 +62,7 @@ impl StatsArray {
     }
 
     #[inline]
-    pub fn witer(&self) -> Iter<'_, f64> {
+    fn witer(&self) -> Iter<'_, f64> {
         self.weights.iter()
     }
 
@@ -68,25 +73,14 @@ impl StatsArray {
 
     #[inline]
     pub fn dof(&self) -> f64 {
-        self.lenf() - 1.0
-    }
-
-    pub fn weighting(&self) -> impl Iterator<Item = f64> {
-        let order: i32 = match self.mode {
-            WeightMode::None => 0,
-            WeightMode::Instrumental => -2,
-            WeightMode::Statistical => -1,
-        };
-        self.witer().map(move |_w: &f64| _w.powi(order))
+        self.lenf64() - 1.0
     }
 
     pub fn sum(&self) -> f64 {
-        let order: i32 = match self.mode {
-            WeightMode::None => return self.iter().sum(),
-            WeightMode::Instrumental => -2,
-            WeightMode::Statistical => -1,
-        };
-        self.wzip().map(|(_n, _w)| _n * _w.powi(order)).sum()
+        match self.mode {
+            WeightMode::None => self.iter().sum(),
+            _ => self.wzip().map(|(_n, _w)| _n * _w).sum()
+        }
     }
 
     pub fn wsum(&self) -> f64 {
@@ -94,14 +88,10 @@ impl StatsArray {
     }
 
     pub fn mean(&self) -> f64 {
-        let order: i32 = match self.mode {
-            WeightMode::None => return self.sum() / self.lenf(),
-            WeightMode::Instrumental => -2,
-            WeightMode::Statistical => 0,
-        };
-        let sum_weights: f64 = self.witer().map(move |_w: &f64| _w.powi(order)).sum();
-        let sum: f64 = self.wzip().map(|(_n, _w)| _n * _w.powi(order)).sum();
-        sum / sum_weights
+        match self.mode {
+            WeightMode::Instrumental => self.sum() / self.wsum(),
+            _ => self.iter().sum::<f64>() / self.lenf64()
+        }
     }
 
     fn sdm(&self) -> f64 {
@@ -109,7 +99,7 @@ impl StatsArray {
         self.iter().map(|_n| square_diff(self.mean(), *_n)).sum()
     }
 
-    pub fn variance(&self) -> f64 {
+    fn variance(&self) -> f64 {
         self.sdm() / self.dof()
     }
 
@@ -118,11 +108,9 @@ impl StatsArray {
     }
 
     pub fn sum_of_squares(&self) -> f64 {
-        let order: i32 = match self.mode {
-            WeightMode::None => return self.iter().map(|_n: &f64| _n * _n).sum(),
-            WeightMode::Instrumental => -2,
-            WeightMode::Statistical => -1,
-        };
-        self.wzip().map(|(_n, _w)| _n * _n * _w.powi(order)).sum()
+        match self.mode {
+            WeightMode::None => self.iter().map(|_n: &f64| _n * _n).sum(),
+            _ => self.wzip().map(|(_n, _w)| _n * _n * _w).sum()
+        }
     }
 }
