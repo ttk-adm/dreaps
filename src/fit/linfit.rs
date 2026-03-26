@@ -25,6 +25,8 @@ pub fn linfit(data: StatsData) -> LinFitStats {
         intercept_error: data.y.stdev(),
         r: 0.987,
     }
+    // let sum = data.y.wsum();
+    // let sumx = data.x.sum();
     // let iter_x = x.iter();
     // let iter_y = y.iter();
 }

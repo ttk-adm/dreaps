@@ -89,6 +89,10 @@ impl StatsArray {
         self.wzip().map(|(_n, _w)| _n * _w.powi(order)).sum()
     }
 
+    pub fn wsum(&self) -> f64 {
+        self.witer().sum()
+    }
+
     pub fn mean(&self) -> f64 {
         let order: i32 = match self.mode {
             WeightMode::None => return self.sum() / self.lenf(),
