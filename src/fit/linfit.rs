@@ -18,15 +18,27 @@ impl LinFitStats {
 }
 
 pub fn linfit(data: StatsData) -> LinFitStats {
+    let sumw: f64 = data.y.wsum();
+    let sumx: f64 = data.x.sum();
+    let sumy: f64 = data.y.sum();
+    let sumx2: f64 = data.x.sum_of_squares();
+    let sumy2: f64 = data.y.sum_of_squares();
+    let sumxy: f64 = data.sum_of_products();
+
+    let delta: f64 = (sumw * sumx2) - (sumx * sumx);
+    let intercept: f64 = (sumx2 * sumy - sumx * sumxy) / delta;
+    let slope: f64 = (sumxy * sumw - sumx * sumy) / delta;
+    let c: f64 = data.lenf() - 2.;
+    let variance: f64 = (sumy2 + intercept.powi(2) * sumw + slope.powi(2) * sumx2 - 2. * (intercept * sumy + slope * sumxy - slope * intercept * sumx)) / c;
+    let slope_error: f64 = (variance * sumw / delta).sqrt();
+    let intercept_error: f64 = (variance * sumx2 / delta).sqrt();
+    let r: f64 = (sumw * sumxy - sumx * sumy) / (delta * (sumw * sumy2 - sumy * sumy)).sqrt();
+
     LinFitStats {
-        slope: data.x.mean(),
-        intercept: data.y.mean(),
-        slope_error: data.x.stdev(),
-        intercept_error: data.y.stdev(),
-        r: 0.987,
+        slope: slope,
+        intercept: intercept,
+        slope_error: slope_error,
+        intercept_error: intercept_error,
+        r: r,
     }
-    // let sum = data.y.wsum();
-    // let sumx = data.x.sum();
-    // let iter_x = x.iter();
-    // let iter_y = y.iter();
 }
