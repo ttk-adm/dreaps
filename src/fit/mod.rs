@@ -1,3 +1,3 @@
 pub mod linfit;
-pub mod tests;
+mod tests;
 pub mod xfit;
