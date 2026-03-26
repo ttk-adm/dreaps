@@ -67,7 +67,7 @@ impl StatsData {
         self.x.len()
     }
 
-    pub fn lenf(&self) -> f64 {
+    pub fn lenf64(&self) -> f64 {
         self.x.lenf64()
     }
 }

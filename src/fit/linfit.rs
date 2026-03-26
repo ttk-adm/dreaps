@@ -29,14 +29,24 @@ pub fn linfit(data: &StatsData) -> LinFitStats {
     let intercept: f64 = (sumx2 * sumy - sumx * sumxy) / delta;
     let slope: f64 = (sumxy * sumw - sumx * sumy) / delta;
     let variance: f64 = {
-        let a: f64 = sumy2 + (intercept.powi(2) * sumw);
-        let b: f64 = slope.powi(2) * sumx2;
-        let c: f64 = data.lenf() - 2.;
-        let e: f64 = intercept * sumy;
-        let f: f64 = slope * sumxy;
-        let g: f64 = slope * intercept * sumx;
-        let d: f64 = 2. * (e + f - g);
-        (a + b - d) / c
+        let n: f64 = data.lenf64() - 2.0;
+
+        let intercept_term: f64 = intercept.powi(2) * sumw;
+        let slope_term: f64 = slope.powi(2) * sumx2;
+
+        let cross_intercept_sumy: f64 = intercept * sumy;
+        let cross_slope_sumxy: f64 = slope * sumxy;
+        let cross_slope_intercept_sumx: f64 = slope * intercept * sumx;
+
+        let adjustment: f64 = 2.0 * (
+            cross_intercept_sumy +
+            cross_slope_sumxy -
+            cross_slope_intercept_sumx
+        );
+
+        let numerator: f64 = sumy2 + intercept_term + slope_term - adjustment;
+
+        numerator / n
     };
     let slope_error: f64 = (variance * sumw / delta).sqrt();
     let intercept_error: f64 = (variance * sumx2 / delta).sqrt();
