@@ -20,7 +20,7 @@ impl StatsData {
 
     pub fn new_statistical_weights(x: Vec<f64>, y: Vec<f64>) -> Self {
         assert_eq!(x.len(), y.len());
-        let weights: Vec<f64> = y.iter().map(|_y: &f64| _y.powi(-1)).collect();
+        let weights: Vec<f64> = y.clone();
         let mode: WeightMode = WeightMode::Statistical;
         Self {
             x: StatsArray::new_weighted(x, weights.clone(), mode),
@@ -52,12 +52,10 @@ impl StatsData {
     }
 
     pub fn sum_of_products(&self) -> f64 {
-        let order: i32 = match self.y.mode {
+        match self.y.mode {
             WeightMode::None => return self.zipxy().map(|(x, y)| x * y).sum(),
-            WeightMode::Instrumental => -2,
-            WeightMode::Statistical => -1,
-        };
-        self.wzipxy().map(|((x, y), w)| x * y * w.powi(order)).sum()
+            _ => self.wzipxy().map(|((x, y), w)| x * y * w).sum()
+        }
     }
 
     pub fn push(&mut self, x: f64, y: f64, weight: f64) {
@@ -70,6 +68,6 @@ impl StatsData {
     }
 
     pub fn lenf(&self) -> f64 {
-        self.x.lenf()
+        self.x.lenf64()
     }
 }
