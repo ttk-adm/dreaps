@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod tests {
+    use crate::fit::xfit::xfit;
     use crate::math::stats::WeightMode;
     use crate::math::stats_array::StatsArray;
-    use crate::fit::xfit::xfit;
 
     #[test]
     fn test_xfit() {
