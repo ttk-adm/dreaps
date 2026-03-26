@@ -1,11 +1,11 @@
 use crate::math::stats_data::StatsData;
 
 pub struct LinFitStats {
-    slope: f64,
-    intercept: f64,
-    slope_error: f64,
-    intercept_error: f64,
-    r: f64,
+    pub slope: f64,
+    pub intercept: f64,
+    pub slope_error: f64,
+    pub intercept_error: f64,
+    pub r: f64,
 }
 
 impl LinFitStats {
@@ -17,7 +17,7 @@ impl LinFitStats {
     }
 }
 
-pub fn linfit(data: StatsData) -> LinFitStats {
+pub fn linfit(data: &StatsData) -> LinFitStats {
     let sumw: f64 = data.y.wsum();
     let sumx: f64 = data.x.sum();
     let sumy: f64 = data.y.sum();
