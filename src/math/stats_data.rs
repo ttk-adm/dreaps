@@ -23,7 +23,7 @@ impl StatsData {
         let weights: Vec<f64> = y.iter().map(|_y: &f64| _y.powi(-1)).collect();
         let mode: WeightMode = WeightMode::Statistical;
         Self {
-            x: StatsArray::new(x),
+            x: StatsArray::new_weighted(x, weights.clone(), mode),
             y: StatsArray::new_weighted(y, weights, mode),
         }
     }
@@ -34,7 +34,7 @@ impl StatsData {
         match status {
             Err(_) => Self::new_statistical_weights(x, y),
             Ok(_) => Self {
-                x: StatsArray::new(x),
+                x: StatsArray::new_weighted(x, weights.clone(), mode),
                 y: StatsArray::new_weighted(y, weights, mode),
             },
         }
@@ -61,7 +61,7 @@ impl StatsData {
     }
 
     pub fn push(&mut self, x: f64, y: f64, weight: f64) {
-        self.x.push(x, 1.);
+        self.x.push(x, weight);
         self.y.push(y, weight);
     }
 
