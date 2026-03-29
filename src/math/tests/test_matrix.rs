@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use std::time::Instant;
     use crate::math::matrix::dot;
     use crate::math::matrix_thr::dot_thr;
+    use std::time::Instant;
 
     #[test]
     fn test_dot() {
@@ -12,11 +12,7 @@ mod tests {
             vec![0., 1., 1.],
             vec![1., 1., 2.],
         ];
-        let matrix_b: Vec<Vec<f64>> = vec![
-            vec![1., 2., 1.],
-            vec![2., 3., 1.],
-            vec![4., 2., 2.],
-        ];
+        let matrix_b: Vec<Vec<f64>> = vec![vec![1., 2., 1.], vec![2., 3., 1.], vec![4., 2., 2.]];
         let dot_product: Vec<Vec<f64>> = dot(&matrix_a, &matrix_b);
         let exp_product: Vec<Vec<f64>> = vec![
             vec![5., 4., 3.],
@@ -43,11 +39,7 @@ mod tests {
             vec![0., 1., 1.],
             vec![1., 1., 2.],
         ];
-        let matrix_b: Vec<Vec<f64>> = vec![
-            vec![1., 2., 1.],
-            vec![2., 3., 1.],
-            vec![4., 2., 2.],
-        ];
+        let matrix_b: Vec<Vec<f64>> = vec![vec![1., 2., 1.], vec![2., 3., 1.], vec![4., 2., 2.]];
         let dot_product: Vec<Vec<f64>> = dot_thr(&matrix_a, &matrix_b);
         let exp_product: Vec<Vec<f64>> = vec![
             vec![5., 4., 3.],
@@ -75,34 +67,52 @@ mod tests {
             vec![0., 1., 1.],
             vec![1., 1., 2.],
         ];
-        let matrix_b: Vec<Vec<f64>> = vec![
-            vec![1., 2., 1.],
-            vec![2., 3., 1.],
-            vec![4., 2., 2.],
-        ];
+        let matrix_b: Vec<Vec<f64>> = vec![vec![1., 2., 1.], vec![2., 3., 1.], vec![4., 2., 2.]];
         let fnls = [dot, dot_thr];
-        let times: Vec<f64> = fnls.iter().map(|_fn| {
-            let t0: Instant = Instant::now();
-            for _ in 0..10_000 {
-                _fn(&matrix_a, &matrix_b);
-            }
-            t0.elapsed().as_micros() as f64
-        }).collect();
+        let times: Vec<f64> = fnls
+            .iter()
+            .map(|_fn| {
+                let t0: Instant = Instant::now();
+                for _ in 0..10_000 {
+                    _fn(&matrix_a, &matrix_b);
+                }
+                t0.elapsed().as_micros() as f64
+            })
+            .collect();
         let diffper: f64 = (times[1] / times[0]) * 100.;
-        println!("Multi-Threading time is {:.2} % of the single-threaded method", diffper);
-        println!("Multi-Threaded: {} us\nSingle-Threaded: {} us", times[1], times[0]);
+        println!(
+            "Multi-Threading time is {:.2} % of the single-threaded method",
+            diffper
+        );
+        println!(
+            "Multi-Threaded: {} us\nSingle-Threaded: {} us",
+            times[1], times[0]
+        );
 
-        let matrix_a: Vec<Vec<f64>> = (0..12).map(|n| (0..12).map(|m| (n + m) as f64).collect()).collect();
-        let matrix_b: Vec<Vec<f64>> = (0..12).map(|n| (0..12).map(|m| (n + m) as f64).collect()).collect();
-        let times: Vec<f64> = fnls.iter().map(|_fn| {
-            let t0: Instant = Instant::now();
-            for _ in 0..10_000 {
-                _fn(&matrix_a, &matrix_b);
-            }
-            t0.elapsed().as_micros() as f64
-        }).collect();
+        let matrix_a: Vec<Vec<f64>> = (0..12)
+            .map(|n| (0..12).map(|m| (n + m) as f64).collect())
+            .collect();
+        let matrix_b: Vec<Vec<f64>> = (0..12)
+            .map(|n| (0..12).map(|m| (n + m) as f64).collect())
+            .collect();
+        let times: Vec<f64> = fnls
+            .iter()
+            .map(|_fn| {
+                let t0: Instant = Instant::now();
+                for _ in 0..10_000 {
+                    _fn(&matrix_a, &matrix_b);
+                }
+                t0.elapsed().as_micros() as f64
+            })
+            .collect();
         let diffper: f64 = (times[1] / times[0]) * 100.;
-        println!("Multi-Threading time is {:.2} % of the single-threaded method", diffper);
-        println!("Multi-Threaded: {} us\nSingle-Threaded: {} us", times[1], times[0]);
+        println!(
+            "Multi-Threading time is {:.2} % of the single-threaded method",
+            diffper
+        );
+        println!(
+            "Multi-Threaded: {} us\nSingle-Threaded: {} us",
+            times[1], times[0]
+        );
     }
 }

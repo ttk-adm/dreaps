@@ -4,7 +4,8 @@ pub fn dot_thr(matrix_a: &[Vec<f64>], matrix_b: &[Vec<f64>]) -> Vec<Vec<f64>> {
     assert_eq!(matrix_b.len(), matrix_a[0].len());
     let cols = matrix_b[0].len();
 
-    matrix_a.par_iter()
+    matrix_a
+        .par_iter()
         .map(|row| {
             (0..cols)
                 .map(|col| {
