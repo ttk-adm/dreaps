@@ -1,34 +1,58 @@
 #[cfg(test)]
 mod tests {
+    use crate::math::matrix::Matrix;
     use crate::math::matrix::dot;
     use crate::math::matrix_thr::dot_thr;
     use std::time::Instant;
 
+    #[rustfmt::skip]
     #[test]
     fn test_dot() {
-        let matrix_a: Vec<Vec<f64>> = vec![
-            vec![1., 0., 1.],
-            vec![2., 1., 1.],
-            vec![0., 1., 1.],
-            vec![1., 1., 2.],
-        ];
-        let matrix_b: Vec<Vec<f64>> = vec![vec![1., 2., 1.], vec![2., 3., 1.], vec![4., 2., 2.]];
-        let dot_product: Vec<Vec<f64>> = dot(&matrix_a, &matrix_b);
-        let exp_product: Vec<Vec<f64>> = vec![
-            vec![5., 4., 3.],
-            vec![8., 9., 5.],
-            vec![6., 5., 3.],
-            vec![11., 9., 6.],
-        ];
-        assert_eq!(dot_product, exp_product);
+        let matrix_a: Matrix<f64> = Matrix::from_vec(
+            4,
+            3,
+            vec![
+                1., 0., 1.,
+                2., 1., 1.,
+                0., 1., 1.,
+                1., 1., 2.,
+            ],
+        );
+
+        let matrix_b: Matrix<f64> = Matrix::from_vec(
+            3,
+            3,
+            vec![
+                1., 2., 1.,
+                2., 3., 1.,
+                4., 2., 2.,
+            ],
+        );
+
+        let dot_product: Matrix<f64> = matrix_a.dot(&matrix_b);
+
+        let expected: Matrix<f64> = Matrix::from_vec(
+            4,
+            3,
+            vec![
+                5., 4., 3.,
+                8., 9., 5.,
+                6., 5., 3.,
+                11., 9., 6.,
+            ],
+        );
+
+        assert_eq!(dot_product, expected);
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Incompatible matrix dimensions")]
     fn test_dot_shape_mismatch() {
-        let matrix_a: Vec<Vec<f64>> = vec![vec![1.; 4]; 4];
-        let matrix_b: Vec<Vec<f64>> = vec![vec![1.; 2]; 2];
-        dot(&matrix_a, &matrix_b);
+        let matrix_a = Matrix::from_vec(4, 4, vec![1.; 16]);
+
+        let matrix_b = Matrix::from_vec(2, 2, vec![1.; 4]);
+
+        let _ = matrix_a.dot(&matrix_b);
     }
 
     #[test]
